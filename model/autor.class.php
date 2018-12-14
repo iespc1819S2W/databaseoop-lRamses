@@ -19,7 +19,7 @@ class Autor
 		try
 		{
 			$result = array();                        
-			$stm = $this->conn->prepare("SELECT id_aut,nom_aut,fk_nacionalitat FROM autors ORDER BY $orderby");
+			$stm = $this->conn->prepare("SELECT id_aut,nom_aut,fk_nacionalitat FROM AUTORS ORDER BY $orderby");
 			$stm->execute();
             $tuples=$stm->fetchAll();
             $this->resposta->setDades($tuples);    // array de tuples
@@ -35,7 +35,21 @@ class Autor
     
     public function get($id)
     {
-        //TODO
+        try
+        {
+            $sql= "SELECT * from AUTORS where id_aut = $id";
+            $stm=$this->conn->prepare($sql);
+            $stm->execute();
+            $tuple=$stm->fetch();
+            $this->resposta->setDades($tuple);
+            $this->resposta->setCorrecta(true);
+            return $this->resposta;
+        }
+        catch(Exception $e)
+        {
+            $this->resposta->setCorrecta(false, $e->getMessage());
+            return $this->resposta;
+        }
     }
 
     
@@ -43,15 +57,15 @@ class Autor
     {
 		try 
 		{
-                $sql = "SELECT max(id_aut) as N from autors";
+                $sql = "SELECT max(id_aut) as N from AUTORS";
                 $stm=$this->conn->prepare($sql);
                 $stm->execute();
                 $row=$stm->fetch();
                 $id_aut=$row["N"]+1;
-                $nom_aut=$data['nom_aut'];
-                $fk_nacionalitat=$data['fk_nacionalitat'];
+                $nom_aut=$data['NOM_AUT'];
+                $fk_nacionalitat=$data['FK_NACIONALITAT'];
 
-                $sql = "INSERT INTO autors
+                $sql = "INSERT INTO AUTORS
                             (id_aut,nom_aut,fk_nacionalitat)
                             VALUES (:id_aut,:nom_aut,:fk_nacionalitat)";
                 
@@ -73,19 +87,70 @@ class Autor
     
     public function update($data)
     {
-        // TODO
+        // TODO $query="UPDATE AUTORS SET NOM_AUT = '$nom', FK_NACIONALITAT = '$nacionalitat' where ID_AUT=$id";
+        try {
+            $nom_aut=$data['NOM_AUT'];
+            $fk_nacionalitat=$data['FK_NACIONALITAT'];
+            $id_aut=$data["ID_AUT"];
+        
+        
+        $sql = "UPDATE AUTORS SET NOM_AUT = :nom_aut , FK_NACIONALITAT = :fk_nacionalitat where ID_AUT = :id_aut";
+        $stm=$this->conn->prepare($sql);
+        $stm->bindValue(':id_aut',$id_aut);
+        $stm->bindValue(':nom_aut',$nom_aut);
+        $stm->bindValue(':fk_nacionalitat',!empty($fk_nacionalitat)?$fk_nacionalitat:NULL,PDO::PARAM_STR);
+        $stm->execute();
+          $this->resposta->setCorrecta(true);
+                return $this->resposta;
+        }
+        catch (Exeption $e)
+        {
+             $this->resposta->setCorrecta(false, "Error insertant: ".$e->getMessage());
+                return $this->resposta;
+        }
+       
+
     }
 
     
     
     public function delete($id)
     {
-        // TODO
+        try {
+            $sql="DELETE from AUTORS where ID_AUT=:id";
+            $stm=$this->conn->prepare($sql);
+            $stm->bindValue(':id',$id);
+            $stm->execute();
+              $this->resposta->setCorrecta(true);
+                return $this->resposta;
+
+        } catch (Exeption $e){
+             $this->resposta->setCorrecta(false, "Error insertant: ".$e->getMessage());
+                return $this->resposta;
+        }
     }
 
     public function filtra($where,$orderby,$offset,$count)
     {
-        // TODO
+        try {
+             $result = array();
+         $sql="SELECT * WHERE nom_aut like :w orderby :orderby :offset limit :count":                        
+            $stm = $this->conn->prepare($sql);
+             $stm->bindValue(':w','%'$where'%');
+              $stm->bindValue(':orderby',$orderby);
+               $stm->bindValue(':offset',$offset);
+                $stm->bindValue(':count',$count);
+            $stm->execute();
+            $tuples=$stm->fetchAll();
+            $this->resposta->setDades($tuples); 
+            $this->resposta->setCorrecta(true);           
+            return $this->resposta;
+        } catch (Exeption $e){
+            $this->resposta->setCorrecta(false, "Error insertant: ".$e->getMessage());
+                return $this->resposta;
+        }
+       
+
     }
     
           
